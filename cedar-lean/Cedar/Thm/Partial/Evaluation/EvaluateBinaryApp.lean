@@ -62,6 +62,25 @@ theorem partialInₛ_on_concrete_eqv_concrete {uid : EntityUID} {vs : Set Spec.V
   unfold Partial.inₛ Spec.inₛ
   simp only [partialInₑ_on_concrete_eqv_concrete]
 
+theorem partialApply₂_on_values_not_residual {op : BinaryOp} {v₁ v₂ : Spec.Value} {entities : Partial.Entities} {r : Partial.ResidualExpr} :
+  ¬ (Partial.apply₂ op v₁ v₂ entities = .ok (.residual r))
+:= by
+  intro h₀
+  simp [Partial.apply₂] at h₀
+  cases op <;> cases v₁ <;> cases v₂ <;> try simp at h₀
+  all_goals try {
+    rename_i p₁ p₂ <;> cases p₁ <;> cases p₂
+    <;> rename_i a b <;> cases a <;> cases b <;> simp at h₀
+    <;> rename_i v₁ p₁ v₂ p₂
+    <;> try { cases h₁ : intOrErr (Int64.add? ⟨v₁, p₁⟩ ⟨v₂, p₂⟩) <;> simp [h₁] at h₀ }
+    <;> try { cases h₁ : intOrErr (Int64.sub? ⟨v₁, p₁⟩ ⟨v₂, p₂⟩) <;> simp [h₁] at h₀ }
+    <;> try { cases h₁ : intOrErr (Int64.mul? ⟨v₁, p₁⟩ ⟨v₂, p₂⟩) <;> simp [h₁] at h₀ }
+  }
+  case mem.prim.set =>
+    rename_i p s <;> cases p <;> cases s <;> simp at h₀ <;>
+    rename_i uid l
+    cases h₁ : Partial.inₛ uid (Set.mk l) entities <;> simp [h₁] at h₀
+
 /--
   `Partial.apply₂` on concrete arguments is the same as `Spec.apply₂` on those
   arguments
