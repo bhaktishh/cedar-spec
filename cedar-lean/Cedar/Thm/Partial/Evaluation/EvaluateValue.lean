@@ -771,7 +771,7 @@ theorem reduce_commutes_subst {pv : Partial.Value} {entities : Partial.Entities}
     | error _ => simp
     | ok v₁ => cases v₁ with
       | value v₁ =>
-      simp only [Except.bind_ok, subst_preserves_evaluation_to_value subsmap wf_v.left h₀]
+      simp only [Except.bind_ok, subst_preserves_evaluation_to_value subsmap wf_v.left wf_e h₀]
       cases b : v₁.asBool with
         | error _ => simp
         | ok b₁ =>
@@ -782,25 +782,25 @@ theorem reduce_commutes_subst {pv : Partial.Value} {entities : Partial.Entities}
             intro h₁
             cases pv' with
             | value _ =>
-              rw [subst_preserves_evaluation_to_value subsmap wf_v.right.right h₁]
+              rw [subst_preserves_evaluation_to_value subsmap wf_v.right.right wf_e h₁]
               simp only [Subst.subst_concrete_value, eval_spec_value]
             | residual _ =>
-              apply reduce_commutes_subst subsmap wf_v.right.right h₁
+              apply reduce_commutes_subst subsmap wf_v.right.right wf_e h₁
           | true =>
             simp only [↓reduceIte]
             intro h₁
             cases pv' with
             | value _ =>
-              rw [subst_preserves_evaluation_to_value subsmap wf_v.right.left h₁]
+              rw [subst_preserves_evaluation_to_value subsmap wf_v.right.left wf_e h₁]
               simp only [Subst.subst_concrete_value, eval_spec_value]
             | residual _ =>
-              apply reduce_commutes_subst subsmap wf_v.right.left h₁
+              apply reduce_commutes_subst subsmap wf_v.right.left wf_e h₁
       | residual r₁ =>
         simp only [Except.bind_ok, Except.ok.injEq]
         intro h₁
         subst pv'
         simp [Partial.Value.subst, Partial.ResidualExpr.subst, Partial.evaluateValue, Partial.evaluateResidual]
-        have h₁ := reduce_commutes_subst subsmap wf_v.left h₀
+        have h₁ := reduce_commutes_subst subsmap wf_v.left wf_e h₀
         simp only [Partial.Value.subst] at h₁
         simp [h₁]
   | .residual (.binaryApp op pv₁ pv₂) => by
@@ -818,8 +818,8 @@ theorem reduce_commutes_subst {pv : Partial.Value} {entities : Partial.Entities}
           | value v₂ =>
             simp only [Except.bind_ok]
             intro h₂
-            simp only [subst_preserves_evaluation_to_value subsmap wf_v.left h₀]
-            simp only [subst_preserves_evaluation_to_value subsmap wf_v.right h₁]
+            simp only [subst_preserves_evaluation_to_value subsmap wf_v.left wf_e h₀]
+            simp only [subst_preserves_evaluation_to_value subsmap wf_v.right wf_e h₁]
             simp only [Except.bind_ok]
             cases pv' with
             | value _ =>
@@ -831,14 +831,15 @@ theorem reduce_commutes_subst {pv : Partial.Value} {entities : Partial.Entities}
           | residual r₂ =>
             simp only [Except.bind_ok]
             intro h₂
-            simp only [subst_preserves_evaluation_to_value subsmap wf_v.left h₀]
-            cases pv' with
-            | value _ =>
-              simp [Partial.Evaluation.EvaluateBinaryApp.subst_preserves_evaluation_to_value subsmap h₂]
-              simp [Partial.Value.subst, Partial.evaluateValue]
-              rw [← h₂]
+            simp only [subst_preserves_evaluation_to_value subsmap wf_v.left wf_e h₀]
+            -- simp [Partial.evaluateBinaryApp] at *
+            -- rw [← h₂]
+            cases h₃ : Partial.evaluateValue (Partial.Value.subst subsmap pv₂) (Partial.Entities.subst subsmap entities) with
+            | error _ =>
+              simp only [Except.bind_err, Except.bind_ok]
+              simp only [Partial.evaluateBinaryApp, Except.ok.injEq] at h₂
               sorry
-            | residual _ => sorry 
+            | ok _ => sorry
       | residual r₁ => sorry
   | .residual (.unaryApp op pv₁) => by
     simp [Partial.Value.subst, Partial.ResidualExpr.subst, Partial.evaluateValue, Partial.evaluateResidual]
