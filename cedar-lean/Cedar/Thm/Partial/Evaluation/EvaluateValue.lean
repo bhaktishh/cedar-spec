@@ -823,8 +823,8 @@ theorem reduce_commutes_subst {pv : Partial.Value} {entities : Partial.Entities}
             simp only [Except.bind_ok]
             cases pv' with
             | value _ =>
-              simp [Partial.Evaluation.EvaluateBinaryApp.subst_preserves_evaluation_to_value subsmap h₂]
-              simp [Partial.Value.subst, Partial.evaluateValue]
+              simp only [Partial.Evaluation.EvaluateBinaryApp.subst_preserves_evaluation_to_value subsmap h₂]
+              simp only [Partial.Value.subst, Partial.evaluateValue]
             | residual r' =>
               simp only [Partial.evaluateBinaryApp] at h₂
               simp only [Partial.Evaluation.EvaluateBinaryApp.partialApply₂_on_values_not_residual] at h₂
@@ -832,18 +832,54 @@ theorem reduce_commutes_subst {pv : Partial.Value} {entities : Partial.Entities}
             simp only [Except.bind_ok]
             intro h₂
             simp only [subst_preserves_evaluation_to_value subsmap wf_v.left wf_e h₀]
-            -- simp [Partial.evaluateBinaryApp] at *
-            -- rw [← h₂]
-            cases h₃ : Partial.evaluateValue (Partial.Value.subst subsmap pv₂) (Partial.Entities.subst subsmap entities) with
-            | error _ =>
-              simp only [Except.bind_err, Except.bind_ok]
-              simp only [Partial.evaluateBinaryApp, Except.ok.injEq] at h₂
-              sorry
-            | ok _ => sorry
-      | residual r₁ => sorry
+            simp only [Except.bind_ok]
+            simp only [Partial.evaluateBinaryApp, Except.ok.injEq] at h₂
+            rw [← h₂]
+            rw [← reduce_commutes_subst subsmap wf_v.right wf_e h₁]
+            simp [Partial.evaluateBinaryApp, Partial.Value.subst, Partial.ResidualExpr.subst, Partial.evaluateValue, Partial.evaluateResidual]
+      | residual r₁ =>
+        simp only [Except.bind_ok]
+        cases h₁ : Partial.evaluateValue pv₂ entities with
+        | error _ => simp
+        | ok v₂ =>
+          intro h₂
+          simp only [Partial.evaluateBinaryApp, Except.bind_ok, Except.ok.injEq] at h₂
+          rw [← h₂]
+          simp only [Partial.Value.subst, Partial.ResidualExpr.subst, Partial.evaluateValue, Partial.evaluateResidual]
+          rw [← reduce_commutes_subst subsmap wf_v.left wf_e h₀]
+          rw [← reduce_commutes_subst subsmap wf_v.right wf_e h₁]
+          simp only [Partial.Value.subst]
   | .residual (.unaryApp op pv₁) => by
     simp [Partial.Value.subst, Partial.ResidualExpr.subst, Partial.evaluateValue, Partial.evaluateResidual]
-    sorry
+    simp [Partial.Value.WellFormed, Partial.ResidualExpr.WellFormed] at wf_v
+    cases h₀ : Partial.evaluateValue pv₁ entities with
+    | error _ => simp
+    | ok v₁ =>
+      cases v₁ with
+      | value v₁ =>
+        simp only [Except.bind_ok]
+        intro h₁
+        simp [subst_preserves_evaluation_to_value subsmap wf_v wf_e h₀]
+        cases pv' with
+        | value  _ =>
+          rw [h₁]
+          simp [Partial.Value.subst, Partial.evaluateValue]
+        | residual r =>
+          simp [Partial.evaluateUnaryApp, Spec.apply₁] at h₁
+          cases op <;> cases v₁ <;> try simp at h₁
+          all_goals {
+            rename_i p <;> cases p
+            <;> simp at h₁
+            <;> rename_i i
+            <;> cases h₂ : Spec.intOrErr i.neg? <;> simp [h₂] at h₁
+          }
+      | residual r₁ =>
+        simp only [Except.bind_ok]
+        intro h₂
+        simp only [Partial.evaluateUnaryApp, Except.ok.injEq] at h₂
+        rw [← h₂]
+        rw [← reduce_commutes_subst subsmap wf_v wf_e h₀]
+        simp only [Partial.Value.subst, Partial.ResidualExpr.subst, Partial.evaluateValue, Partial.evaluateResidual]
   | .residual (.hasAttr pv₁ attr) => by
     simp [Partial.Value.subst, Partial.ResidualExpr.subst, Partial.evaluateValue, Partial.evaluateResidual]
     sorry
