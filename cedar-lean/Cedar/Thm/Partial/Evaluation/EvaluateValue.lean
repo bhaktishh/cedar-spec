@@ -891,13 +891,7 @@ theorem reduce_commutes_subst {pv : Partial.Value} {entities : Partial.Entities}
         simp only [Except.bind_ok]
         intro h₁
         simp [subst_preserves_evaluation_to_value subsmap wf_v wf_e h₀]
-        cases pv' with
-        | value _ =>
-          simp [Partial.Value.subst, Partial.evaluateValue]
-          rw [← h₁]
-          simp [Partial.Entities.subst]
-          sorry
-        | residual r => sorry
+        sorry
       | residual r₁ => sorry
   | .residual (.getAttr pv₁ attr) => by
     simp [Partial.Value.subst, Partial.ResidualExpr.subst, Partial.evaluateValue, Partial.evaluateResidual]
